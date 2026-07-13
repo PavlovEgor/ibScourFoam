@@ -83,4 +83,11 @@ doc/Doxygen/DTAGS
 # Ignore the test directory
 /tutorialsTest
 
+# Ignore generated mesh and simulation files
+tutorials/*/processor*/
+tutorials/*/constant/polyMesh/
+tutorials/*/dynamicCode/
+tutorials/*/log.*
+tutorials/**/log.*
+
 
