@@ -25,7 +25,7 @@ constrainPressure(p, U, phiHbyA, rAU, MRF);
 
 
 // Non-orthogonal pressure corrector loop
-while (piso.correctNonOrthogonal())
+while (pimple.correctNonOrthogonal())
 {
     // Pressure corrector
     fvScalarMatrix pEqn
@@ -40,9 +40,9 @@ while (piso.correctNonOrthogonal())
     // For now, nothing has been done to pressure term.
 
 
-    pEqn.solve(mesh.solver(p.select(piso.finalInnerIter())));
+    pEqn.solve(mesh.solver(p.select(pimple.finalInnerIter())));
     
-    if (piso.finalNonOrthogonalIter())
+    if (pimple.finalNonOrthogonalIter())
     {
         phi = phiHbyA - pEqn.flux();
     }

@@ -22,11 +22,12 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Application
-    ibPisoFoam
+    ibPimpleFoam
 
 Description
     Immersed boundary method solver for coupling between incompressible turbulent flow,
     and morphodynamics governed by Exner equation.
+    Uses PIMPLE (Pressure Implicit with Momentum Explicit) algorithm for faster convergence.
 
     Sub-models include:
     - turbulence modelling, i.e. laminar, RAS or LES
@@ -41,7 +42,7 @@ Description
 #include "fvCFD.H"
 #include "singlePhaseTransportModel.H"
 #include "turbulentTransportModel.H"
-#include "pisoControl.H"
+#include "pimpleControl.H"
 #include "fvOptions.H"
 #include "immersedBoundaryFvMesh.H"
 #include "wallFvPatch.H"
@@ -88,35 +89,34 @@ int main(int argc, char *argv[])
         mesh.evaluateU();
         #include "immersedBoundaryCourantNo.H"
 
-        // Pressure-velocity PISO corrector
+        // Pressure-velocity PIMPLE corrector
+        while (pimple.loop())
         {
             Info<<"*** Starting Predictor Step"<<endl;
             #include "UEqn.H"
 
             Info<<"*** Starting Correct Step Loop"<<endl;
-            // --- PISO loop
-            while (piso.correct())
+            // --- Pressure corrector loop
+            while (pimple.correct())
             {
                 #include "pEqn.H"
             }
 
-        }
-        
+            if (pimple.turbCorr())
+            {
+                laminarTransport.correct();
 
-        laminarTransport.correct();
-        
-      
-        
-        // Specialized RASModels are available, such as
-        // kEpsilonIB, kOmegaIB, kOmegaSSTIB, kOmegaSSTLMIB, kOmegaSSTSASIB
-        // IB wall function is implemented, but major part can be found in 
-        // immersedBoundaryFvMesh::kOmegaCorrection() and 
-        // immersedBoundaryFvMesh::kEpsilonCorrection()
-        // which are located in immersedBoundaryFvMeshTurbulence.C
-        // kOmegaCorrection() has detailed comments.
-        
-        
-        turbulence->correct();
+                // Specialized RASModels are available, such as
+                // kEpsilonIB, kOmegaIB, kOmegaSSTIB, kOmegaSSTLMIB, kOmegaSSTSASIB
+                // IB wall function is implemented, but major part can be found in
+                // immersedBoundaryFvMesh::kOmegaCorrection() and
+                // immersedBoundaryFvMesh::kEpsilonCorrection()
+                // which are located in immersedBoundaryFvMeshTurbulence.C
+                // kOmegaCorrection() has detailed comments.
+
+                turbulence->correct();
+            }
+        }
         
         #include "calcForce.H"
         

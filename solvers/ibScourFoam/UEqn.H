@@ -16,7 +16,7 @@ UEqn.relax();
 
 fvOptions.constrain(UEqn);
 
-if (piso.momentumPredictor())
+if (pimple.momentumPredictor())
 {
     // It is easier to modify gradP than fvc::grad(p) in pEqn.H
     fvVectorMatrix UEqn1
