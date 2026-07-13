@@ -222,9 +222,7 @@ void Foam::immersedBoundaryFvMesh::parallelWrite
             fileHandler().NewOFstream
             (
                 filePath,
-                time().writeFormat(),
-                IOstream::currentVersion,
-                time().writeCompression()
+                IOstreamOption(time().writeFormat(), IOstream::currentVersion, time().writeCompression())
             )
         );
         volValues.writeHeader(osPtr());
@@ -251,9 +249,7 @@ void Foam::immersedBoundaryFvMesh::parallelWriteMesh
         fileHandler().NewOFstream
         (
             filePath,
-            time().writeFormat(),
-            IOstream::currentVersion,
-            time().writeCompression()
+            IOstreamOption(time().writeFormat(), IOstream::currentVersion, time().writeCompression())
         )
     );
     IOField.writeHeader(osPtr());
@@ -274,9 +270,7 @@ void Foam::immersedBoundaryFvMesh::parallelWriteMesh
         fileHandler().NewOFstream
         (
             filePath,
-            time().writeFormat(),
-            IOstream::currentVersion,
-            time().writeCompression()
+            IOstreamOption(time().writeFormat(), IOstream::currentVersion, time().writeCompression())
         )
     );
     IOField.writeHeader(osPtr());
@@ -298,9 +292,7 @@ void Foam::immersedBoundaryFvMesh::parallelWriteMesh
         fileHandler().NewOFstream
         (
             filePath,
-            time().writeFormat(),
-            IOstream::currentVersion,
-            time().writeCompression()
+            IOstreamOption(time().writeFormat(), IOstream::currentVersion, time().writeCompression())
         )
     );
     IOField.writeHeader(osPtr(),"faceList");
@@ -321,9 +313,7 @@ void Foam::immersedBoundaryFvMesh::parallelWriteMesh
         fileHandler().NewOFstream
         (
             filePath,
-            time().writeFormat(),
-            IOstream::currentVersion,
-            time().writeCompression()
+            IOstreamOption(time().writeFormat(), IOstream::currentVersion, time().writeCompression())
         )
     );
     IOField.writeHeader(osPtr());
@@ -345,9 +335,7 @@ void Foam::immersedBoundaryFvMesh::parallelWriteMesh
         fileHandler().NewOFstream
         (
             filePath,
-            time().writeFormat(),
-            IOstream::currentVersion,
-            time().writeCompression()
+            IOstreamOption(time().writeFormat(), IOstream::currentVersion, time().writeCompression())
         )
     );
     IOField.writeHeader(osPtr());
@@ -488,7 +476,12 @@ void Foam::immersedBoundaryFvMesh::pressureCoeff(label objectID )const
         mkDir(forcesDir);
 
         // Open new file at start up
-        OFstream fileWriter(forcesDir/("obj_" + objectNames(objectID) + ".dat"),IOstream::ASCII,IOstream::currentVersion,IOstream::UNCOMPRESSED,true);// append true
+        OFstream fileWriter
+        (
+            forcesDir/("obj_" + objectNames(objectID) + ".dat"),
+            IOstreamOption(IOstream::ASCII, IOstream::currentVersion, IOstream::UNCOMPRESSED),
+            IOstreamOption::APPEND
+        );// append true
 
         fileWriter<<time().value()<<tab<<pForce[0]<<tab<<pForce[1]<<tab<<pForce[2]<<endl;
     }//end of master

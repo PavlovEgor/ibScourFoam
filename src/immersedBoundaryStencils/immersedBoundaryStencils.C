@@ -24,11 +24,13 @@
 \*---------------------------------------------------------------------------*/
 
 #include "immersedBoundaryStencils.H"
+#include "demandDrivenData.H"
 #include "Random.H"
 #include "addToRunTimeSelectionTable.H"
 #include "vectorTools.H"
 #include "simpleObjectRegistry.H"
 #include "SortableList.H"
+#include "processorPolyPatch.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 

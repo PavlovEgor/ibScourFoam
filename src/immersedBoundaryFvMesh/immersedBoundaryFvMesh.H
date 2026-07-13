@@ -67,9 +67,7 @@ SourceFiles
 #include "surfaceIntersection.H"
 #include "booleanSurface.H"
 #include "intersectedSurface.H"
-#include "sampledTriSurfaceMesh.H"
-#include "isoSurfaceCell.H"
-#include "isoSurface.H"
+#include "sampledMeshedSurface.H"
 #include "volPointInterpolation.H"
 #include "cutTriSurfaceMesh.H"
 #include "CompactIOList.H"
@@ -108,8 +106,8 @@ public:
         };
 
         typedef List<vectorList> vectorListList;
-        typedef PrimitivePatch<face, ::Foam::List, pointField, point> PPatch;
-        typedef PrimitivePatchInterpolation< PrimitivePatch<face, ::Foam::List, pointField, point> >  PPatchInterpolation;
+        typedef PrimitivePatch<List<face>, pointField> PPatch;
+        typedef PrimitivePatchInterpolation<PPatch> PPatchInterpolation;
 
 
 private:
@@ -149,7 +147,7 @@ private:
         mutable PtrList<label>* addObjectsIDListPtr_;
         //- cut triSurface related
         //- new cut surface
-        mutable PtrList<sampledTriSurfaceMesh>* sampledTriSurfaceMeshListPtr_;
+        mutable PtrList<sampledMeshedSurface>* sampledTriSurfaceMeshListPtr_;
 
         mutable PtrList<cutTriSurfaceMesh>* cutTriSurfaceMeshListPtr_;
 
@@ -795,7 +793,7 @@ public:
         return *addObjectsIDListPtr_;
     }
     //- return
-    const PtrList<sampledTriSurfaceMesh>& sampledTriSurfaceMeshList() const
+    const PtrList<sampledMeshedSurface>& sampledTriSurfaceMeshList() const
     {
         return *sampledTriSurfaceMeshListPtr_;
     }

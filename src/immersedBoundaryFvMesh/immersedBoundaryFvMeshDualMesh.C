@@ -414,8 +414,6 @@ void Foam::immersedBoundaryFvMesh::makeDualMesh(const label& objectID)const
         }
     }
 
-    Xfer<pointField> XferNewPoints(newPoints);
-    
     Foam::fvMesh mesh
     (
         IOobject
@@ -424,12 +422,16 @@ void Foam::immersedBoundaryFvMesh::makeDualMesh(const label& objectID)const
             time().constant(),
             time(),
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            // AUTO_WRITE: in v2412 the mesh components (points, faces,
+            // owner, neighbour, boundary) inherit this writeOpt; with
+            // NO_WRITE mesh.write() below would skip them and the
+            // MUST_READ re-read of the dual mesh fails
+            IOobject::AUTO_WRITE
         ),
-        XferNewPoints,
-        newFaces.xfer(),
-        newOwners.xfer(),
-        newNeighbours.xfer()
+        std::move(newPoints),
+        faceList(std::move(newFaces)),
+        labelList(std::move(newOwners)),
+        labelList(std::move(newNeighbours))
     );
         
 
@@ -562,7 +564,7 @@ void Foam::immersedBoundaryFvMesh::makeDualMesh(const label& objectID)const
     // Read again and save it to pointer
     // Cannot directly use the mesh made above
     dualMeshListPtr_->set
-    ( 
+    (
         objectID,
         new fvMesh
         (
@@ -573,11 +575,7 @@ void Foam::immersedBoundaryFvMesh::makeDualMesh(const label& objectID)const
                 time(),
                 IOobject::MUST_READ,
                 IOobject::NO_WRITE
-            ),
-            XferNewPoints,
-            newFaces.xfer(),
-            newOwners.xfer(),
-            newNeighbours.xfer()
+            )
         )
     );
     

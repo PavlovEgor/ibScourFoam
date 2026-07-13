@@ -220,24 +220,24 @@ void kOmegaSSTSASIB<BasicTurbulenceModel>::correct()
     );
 
     tmp<volTensorField> tgradU = fvc::grad(U);
-    volScalarField S2(2*magSqr(symm(tgradU())));
-    volScalarField::Internal GbyNu(dev(twoSymm(tgradU()())) && tgradU()());
-    volScalarField::Internal G(this->GName(), nut()*GbyNu);
-    tgradU.clear();
+    const volScalarField S2(this->S2(tgradU()));
+    volScalarField::Internal GbyNu0(this->GbyNu0(tgradU(), S2));
+    volScalarField::Internal G(this->GName(), nut*GbyNu0);
 
     // Update omega and G at the wall
     this->omega_.boundaryFieldRef().updateCoeffs();
+    this->omega_.boundaryFieldRef().template evaluateCoupled<coupledFvPatch>();
 
     // create ibMesh
     const immersedBoundaryFvMesh& ibMesh = const_cast<immersedBoundaryFvMesh&>
             (this->db().parent().objectRegistry::lookupObject<immersedBoundaryFvMesh>(this->db().name()));
-            
-    
+
+
 
     // main correction of IB method
     ibMesh.kOmegaCorrection(*this); // move it before momentum predictor
-    
-     
+
+
     //ibMesh.ibCorrectPhi(alphaRhoPhi);
 
     volScalarField CDkOmega
@@ -252,6 +252,8 @@ void kOmegaSSTSASIB<BasicTurbulenceModel>::correct()
         volScalarField::Internal gamma(this->gamma(F1));
         volScalarField::Internal beta(this->beta(F1));
 
+        GbyNu0 = this->GbyNu(GbyNu0, F23(), S2());
+
         // Turbulent frequency equation
         tmp<fvScalarMatrix> omegaEqn
         (
@@ -259,13 +261,7 @@ void kOmegaSSTSASIB<BasicTurbulenceModel>::correct()
             + fvm::div(alphaRhoPhi, this->omega_)
             - fvm::laplacian(alpha*rho*this->DomegaEff(F1), this->omega_)
             ==
-            alpha()*rho()*gamma
-            *min
-            (
-                GbyNu,
-                (this->c1_/this->a1_)*this->betaStar_*this->omega_()
-                *max(this->a1_*this->omega_(), this->b1_*F23()*sqrt(S2()))
-            )
+            alpha()*rho()*gamma*GbyNu0
             - fvm::SuSp((2.0/3.0)*alpha()*rho()*gamma*divU, this->omega_)
             - fvm::Sp(alpha()*rho()*beta*this->omega_(), this->omega_)
             - fvm::SuSp
@@ -299,10 +295,12 @@ void kOmegaSSTSASIB<BasicTurbulenceModel>::correct()
         ==
         alpha()*rho()*this->Pk(G)
         - fvm::SuSp((2.0/3.0)*alpha()*rho()*divU, this->k_)
-        - fvm::Sp(alpha()*rho()*this->epsilonByk(F1, F23),this->k_)
+        - fvm::Sp(alpha()*rho()*this->epsilonByk(F1, tgradU()),this->k_)
         + this->kSource()
         + fvOptions(alpha, rho, this->k_)
     );
+
+    tgradU.clear();
 
     kEqn.ref().relax();
     fvOptions.constrain(kEqn.ref());
@@ -321,7 +319,7 @@ void kOmegaSSTSASIB<BasicTurbulenceModel>::correct()
     fvOptions.correct(this->k_);
     bound(this->k_, this->kMin_);
    
-    this->correctNut(S2, F23);
+    this->correctNut(S2);
     
     
     ibMesh.nutCorrection();

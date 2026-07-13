@@ -11,13 +11,11 @@ EXE_INC = \
     -I$(LIB_SRC)/dynamicFvMesh/lnInclude \
     -I$(LIB_SRC)/surfMesh/lnInclude \
     -I$(LIB_SRC)/fvOptions/lnInclude \
-    -I$(LIB_SRC)/triSurface/lnInclude \
 	-I../../src/lnInclude \
 	-I../../src/include
-	
+
 
 EXE_LIBS = \
-    -ltriSurface \
     -lturbulenceModels \
     -lincompressibleTurbulenceModels \
     -lincompressibleTransportModels \

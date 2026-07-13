@@ -413,16 +413,21 @@ void Foam::immersedBoundaryFvMesh::makeTriAddressing
         List<DynamicList<label>> proTri(Pstream::nProcs());
         proTri[Pstream::myProcNo()]=triFacesInMesh;
         proTri[Pstream::myProcNo()].shrink();
-        Pstream::gatherList(proTri);   
+        Pstream::gatherList(proTri);
         Pstream::scatterList(proTri);
 
-           
+        labelListList proTriConverted(proTri.size());
+        forAll(proTri, procI)
+        {
+            proTriConverted[procI] = proTri[procI];
+        }
+
         proTriFacesInMeshListPtr_->set
         (
          objectID,
              new labelListList
              (
-              	proTri
+              	proTriConverted
              )
         );
     }

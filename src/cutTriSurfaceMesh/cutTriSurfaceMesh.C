@@ -24,6 +24,7 @@
 \*---------------------------------------------------------------------------*/
 
 #include "cutTriSurfaceMesh.H"
+#include "demandDrivenData.H"
 #include "Random.H"
 #include "addToRunTimeSelectionTable.H"
 #include "EdgeMap.H"
@@ -1177,7 +1178,12 @@ void Foam::cutTriSurfaceMesh::makeBoundaryFacesAndEdges
             face oldFace = faces[globalFaceID];
             oldFace.triangles(points,dynNewTriFaces);
         }
-        triFaceList newTriFaces(dynNewTriFaces.shrink());
+        const DynamicList<face>& shrunkTriFaces = dynNewTriFaces.shrink();
+        triFaceList newTriFaces(shrunkTriFaces.size());
+        forAll(shrunkTriFaces, triFaceI)
+        {
+            newTriFaces[triFaceI] = triFace(shrunkTriFaces[triFaceI]);
+        }
         totalTriFaces.append(newTriFaces);
 
         triSurface patchSurf(newTriFaces,points);
@@ -1449,7 +1455,12 @@ void Foam::cutTriSurfaceMesh::makeBoundaryFacesAndEdges
             face oldFace = faces[globalFaceID];
             oldFace.triangles(points,dynNewTriFaces);
         }
-        triFaceList newTriFaces(dynNewTriFaces.shrink());
+        const DynamicList<face>& shrunkTriFaces = dynNewTriFaces.shrink();
+        triFaceList newTriFaces(shrunkTriFaces.size());
+        forAll(shrunkTriFaces, triFaceI)
+        {
+            newTriFaces[triFaceI] = triFace(shrunkTriFaces[triFaceI]);
+        }
         totalTriFaces.append(newTriFaces);
 
         triSurface patchSurf(newTriFaces,points);

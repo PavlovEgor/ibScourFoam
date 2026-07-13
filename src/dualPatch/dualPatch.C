@@ -24,6 +24,7 @@
 \*---------------------------------------------------------------------------*/
 
 #include "dualPatch.H"
+#include "demandDrivenData.H"
 #include "Random.H"
 #include "addToRunTimeSelectionTable.H"
 #include "EdgeMap.H"

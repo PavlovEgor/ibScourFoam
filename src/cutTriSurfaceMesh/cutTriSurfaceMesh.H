@@ -72,7 +72,7 @@ public:
  
     typedef treeDataPrimitivePatch<polyPatch> patchTreeData;
     typedef indexedOctree<patchTreeData> patchSearch;
-    typedef PrimitivePatch<face, ::Foam::List, pointField, point> PPatch;
+    typedef PrimitivePatch<List<face>, pointField> PPatch;
 
 private:
  // Private member data

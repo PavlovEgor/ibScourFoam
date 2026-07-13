@@ -226,7 +226,7 @@ void Foam::immersedBoundaryFvMesh::setInlet() const
                 dimensionedScalar nu(transportProperties.lookup("nu"));
 
                 
-                vector gravity= objectDictList()[objectID].lookup("gravity");
+                vector gravity(objectDictList()[objectID].lookup("gravity"));
                 vector gDir = gravity/mag(gravity);
 
                 boundBox* meshBB = new boundBox(this->points(), false);
@@ -341,7 +341,7 @@ void Foam::immersedBoundaryFvMesh::evaluateU() const
 
     word nutWORD = "nut";
     dictionary turbDict (this->lookupObject<dictionary>("turbulenceProperties"));
-    word modelType = turbDict.lookup("simulationType");
+    word modelType(turbDict.lookup("simulationType"));
     if(modelType == "laminar")
     {
         nutWORD = "nu";
@@ -483,7 +483,7 @@ void Foam::immersedBoundaryFvMesh::ibCellForcing
 
 
     dictionary turbDict (this->lookupObject<dictionary>("turbulenceProperties"));
-    word modelType=turbDict.lookup("simulationType");
+    word modelType(turbDict.lookup("simulationType"));
     if(modelType == "laminar")
     {
         fromSPointReconstruction(U,objectID);
@@ -560,7 +560,7 @@ void Foam::immersedBoundaryFvMesh::ibCellReconstruction
 
     evaluateCoupled(U);
 
-    word modelType = turbDict.lookup("simulationType");
+    word modelType(turbDict.lookup("simulationType"));
 
 
 
@@ -599,7 +599,7 @@ void Foam::immersedBoundaryFvMesh::ghostCellReconstruction
         (this->lookupObject<surfaceScalarField>("phi"));
 
     const labelList& gCL = ghostCellsList()[objectID];
-    word modelType = turbDict.lookup("simulationType");
+    word modelType(turbDict.lookup("simulationType"));
     if(modelType == "laminar")
     {
         const pointField& imagePoints = imagePointsList()[objectID];
@@ -1198,8 +1198,8 @@ void immersedBoundaryFvMesh::correctOffDiag
     const labelList& ibFaceCells = ibFaceCellsList()[objectID];
     const scalarField& ibGamma = ibGammaList()[objectID].primitiveField();
 
-    const unallocLabelList& own = this->owner();
-    const unallocLabelList& nei = this->neighbour();
+    const labelUList& own = this->owner();
+    const labelUList& nei = this->neighbour();
 
     // Get delta coefficients
     const surfaceScalarField& dc = this->deltaCoeffs();

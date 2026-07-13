@@ -24,6 +24,7 @@
   \*---------------------------------------------------------------------------*/
 
 #include "sedModules.H"
+#include "demandDrivenData.H"
 #include "Random.H"
 #include "addToRunTimeSelectionTable.H"
 #include "vectorTools.H"

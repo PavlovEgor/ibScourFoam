@@ -290,13 +290,13 @@ void Foam::immersedBoundaryFvMesh::sediment_dual(const label& objectID)const
             depositionListPtr_->set
             (
                 objectID,
-                ibDeposition
+                new scalarField(ibDeposition)
             );
 
             entrainmentListPtr_->set
             (
                 objectID,
-                ibEntrainment
+                new scalarField(ibEntrainment)
             );
 
             
@@ -409,7 +409,7 @@ void Foam::immersedBoundaryFvMesh::sediment_dual(const label& objectID)const
             accumDItaListPtr_->set
             (
                 objectID,
-                accumDIta
+                new scalarField(accumDIta)
             );
         }
         else
@@ -418,7 +418,7 @@ void Foam::immersedBoundaryFvMesh::sediment_dual(const label& objectID)const
             accumDItaListPtr_->set
             (
                 objectID,
-                accumDIta
+                new scalarField(accumDIta)
             );
         }
 

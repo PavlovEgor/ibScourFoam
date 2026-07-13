@@ -24,6 +24,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "immersedBoundaryFvMesh.H"
+#include "demandDrivenData.H"
 #include "addToRunTimeSelectionTable.H"
 #include "volFields.H"
 

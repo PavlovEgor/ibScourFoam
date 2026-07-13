@@ -48,7 +48,7 @@ void Foam::immersedBoundaryFvMesh::markCells()const
 
     // initialize cell infor list as outside
     List<cellInfo> cellInfoList(this->nCells());
-    cellInfoList = cellClassification::OUTSIDE;
+    cellInfoList = cellInfo(cellClassification::OUTSIDE);
 
     if (gammaCellTypeListPtr_||ibCellsListPtr_||ghostCellsListPtr_||gammaCellTypePtr_||gammaPtr_||oldIbCellsListPtr_||oldIbDeadCellsListPtr_||oldIbLiveCellsListPtr_)
     {
@@ -115,7 +115,7 @@ void Foam::immersedBoundaryFvMesh::markCells()const
             {
                 if(cellType[cellI] != cellClassification::OUTSIDE)
                 {
-                    cellInfoList[cellI] = cellType[cellI];
+                    cellInfoList[cellI] = cellInfo(cellType[cellI]);
                 }
             }
         }
@@ -160,7 +160,7 @@ void Foam::immersedBoundaryFvMesh::markCells()const
             {
                 if(cellType[cellI] != cellClassification::OUTSIDE)
                 {
-                    cellInfoList[cellI] = cellType[cellI];
+                    cellInfoList[cellI] = cellInfo(cellType[cellI]);
                 }
             }
             
@@ -485,7 +485,7 @@ void Foam::immersedBoundaryFvMesh::correctIbCell
                 scalarField gammaExtNei =
                     gammaExt.boundaryField()[patchI].patchNeighbourField();
 
-                const unallocLabelList& fCells =
+                const labelUList& fCells =
                     this->boundary()[patchI].faceCells();
 
                 forAll (gammaExtNei, faceI)
@@ -643,8 +643,8 @@ void Foam::immersedBoundaryFvMesh::makeGhostAndIbCells(const label& objectID) co
     labelHashSet ghostCellsSet;
 
     const fvMesh& mesh_= *this;
-    const unallocLabelList& owner = mesh_.owner();
-    const unallocLabelList& neighbour = mesh_.neighbour();
+    const labelUList& owner = mesh_.owner();
+    const labelUList& neighbour = mesh_.neighbour();
 
     const volScalarField& gE = gammaExt;
     scalarField& gammaExtI = gammaExt.primitiveFieldRef();
@@ -693,7 +693,7 @@ void Foam::immersedBoundaryFvMesh::makeGhostAndIbCells(const label& objectID) co
             scalarField gammaExtNei =
                 gE.boundaryField()[patchI].patchNeighbourField();
 
-            const unallocLabelList& fCells =
+            const labelUList& fCells =
                 mesh_.boundary()[patchI].faceCells();
  
 
@@ -958,8 +958,8 @@ void Foam::immersedBoundaryFvMesh::makeIbInfo(const label& objectID) const
         ibCellIndicator[ibCells[ibCellID]] = ibCellID;
     }
 
-    const unallocLabelList& owner = this->owner();
-    const unallocLabelList& neighbour = this->neighbour();
+    const labelUList& owner = this->owner();
+    const labelUList& neighbour = this->neighbour();
 
     forAll (neighbour, faceI)
     {
@@ -1047,25 +1047,25 @@ void Foam::immersedBoundaryFvMesh::makeIbInfo(const label& objectID) const
     ibFacesListPtr_->set
     (
         objectID,
-        new labelList(ibF.xfer())
+        new labelList(std::move(ibF))
     );
 
     ibFaceCellsListPtr_->set
     (
         objectID,
-        new labelList(ibFC.xfer())
+        new labelList(std::move(ibFC))
     );
 
     ibFaceFlipsListPtr_->set
     (
         objectID,
-        new boolList(ibFF.xfer())
+        new boolList(std::move(ibFF))
     );
 
     ibGammaListPtr_->set
     (
         objectID,
-        ibGamma
+        new volScalarField(ibGamma)
     );
 
     ibGamma.clear();
@@ -1121,8 +1121,8 @@ void Foam::immersedBoundaryFvMesh::makeGamma
     scalarField& gammaCellTypeI = gammaCellType.primitiveFieldRef();
     forAll(gammaCellTypeI,cellI)
     {
-        if(cellInfoList[cellI]==cellClassification::OUTSIDE) gammaCellTypeI[cellI] = 1;
-        else if(cellInfoList[cellI]==cellClassification::CUT) gammaCellTypeI[cellI] = 0;
+        if(cellInfoList[cellI].type()==cellClassification::OUTSIDE) gammaCellTypeI[cellI] = 1;
+        else if(cellInfoList[cellI].type()==cellClassification::CUT) gammaCellTypeI[cellI] = 0;
         else gammaCellTypeI[cellI] = -1;
     }
 
@@ -1290,8 +1290,8 @@ void Foam::immersedBoundaryFvMesh::makeSGamma
     surfaceScalarField::Boundary& sGammaPatches =
         sGamma.boundaryFieldRef();
 
-    const unallocLabelList& owner = this->owner();
-    const unallocLabelList& neighbour = this->neighbour();
+    const labelUList& owner = this->owner();
+    const labelUList& neighbour = this->neighbour();
 
     // Live cells indicator
     const volScalarField& gExt = ibGammaList()[objectID];

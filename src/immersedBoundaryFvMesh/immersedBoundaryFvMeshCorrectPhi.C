@@ -91,7 +91,7 @@ void immersedBoundaryFvMesh::ibFacesAdjust
 ) const
 {
     dictionary turbDict (this->lookupObject<dictionary>("turbulenceProperties"));
-    word modelType=turbDict.lookup("simulationType");
+    word modelType(turbDict.lookup("simulationType"));
     if(modelType=="laminar")
     {
         fromIbFaceSPointReconstruction(phi,U,objectID);

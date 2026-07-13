@@ -63,8 +63,8 @@ class dualPatch
 public:
     typedef treeDataPrimitivePatch<polyPatch> patchTreeData;
     typedef indexedOctree<patchTreeData> patchSearch;
-    typedef PrimitivePatch<face, ::Foam::List, pointField, point> PPatch;
-    typedef PrimitivePatchInterpolation< PrimitivePatch<face, ::Foam::List, pointField, point> >  PPatchInterpolation;
+    typedef PrimitivePatch<List<face>, pointField> PPatch;
+    typedef PrimitivePatchInterpolation<PPatch> PPatchInterpolation;
 
 private:
  // Private member data
