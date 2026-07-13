@@ -86,6 +86,7 @@ doc/Doxygen/DTAGS
 # Ignore generated mesh and simulation files
 tutorials/*/processor*/
 tutorials/*/constant/polyMesh/
+tutorials/*/constant/plane_dual/
 tutorials/*/dynamicCode/
 tutorials/*/log.*
 tutorials/**/log.*
