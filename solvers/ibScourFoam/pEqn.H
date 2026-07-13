@@ -50,6 +50,9 @@ while (pimple.correctNonOrthogonal())
 
 #include "immersedBoundaryContinuityErrs.H"
 
+// Explicitly relax pressure for momentum corrector
+// (required for stability when nOuterCorrectors > 1)
+p.relax();
 
 gradP == fvc::grad(p);
 
