@@ -80,15 +80,32 @@ int main(int argc, char *argv[])
 
     turbulence->validate();
 
+    #include "createTimeControls.H"
+
+    {
+        #include "immersedBoundaryCourantNo.H"
+        #include "setInitialDeltaT.H"
+    }
+
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
     Info<< "\nStarting time loop\n" << endl;
 
-    while (runTime.loop())
+    while (runTime.run())
     {
-        Info<< "Time = " << runTime.timeName() << nl << endl;
-
         double tPrev = runTime.elapsedCpuTime();
+
+        // Courant number of the previous step (live cells only) drives
+        // the adaptive time step; controlled by adjustTimeStep/maxCo/maxDeltaT
+        // in controlDict
+        #include "readTimeControls.H"
+        #include "immersedBoundaryCourantNo.H"
+        #include "setDeltaT.H"
+        logStepTime(runTime, tPrev, "CourantNo");
+
+        ++runTime;
+
+        Info<< "Time = " << runTime.timeName() << nl << endl;
 
         mesh.update();
         logStepTime(runTime, tPrev, "IB_MeshUpdate");
@@ -100,9 +117,6 @@ int main(int argc, char *argv[])
         // located around Line 584 in immersedBoundaryFvMeshUpdateCellValues.C
         mesh.evaluateU();
         logStepTime(runTime, tPrev, "IB_EvaluateU");
-
-        #include "immersedBoundaryCourantNo.H"
-        logStepTime(runTime, tPrev, "CourantNo");
 
         // Pressure-velocity PIMPLE corrector
         while (pimple.loop())

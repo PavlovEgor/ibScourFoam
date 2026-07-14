@@ -20,11 +20,17 @@ solvers
     "(p)"
     {
         solver          GAMG;
-        tolerance       0;
+        tolerance       1e-7;
         relTol          0.01;
         smoother        GaussSeidel;
-        cacheAgglomeration no;
 
+        // The IB method never changes the mesh topology, only the matrix
+        // coefficients, so the agglomeration hierarchy can be reused
+        // between solves (measured ~7% of the pressure-correction time)
+        cacheAgglomeration yes;
+        nCellsInCoarsestLevel 20;
+        agglomerator    faceAreaPair;
+        mergeLevels     1;
     }
 
     pFinal
@@ -52,9 +58,25 @@ solvers
 
 PIMPLE
 {
-    nOuterCorrectors 1;
-    nCorrectors     3;
+    nOuterCorrectors 3;
+    nCorrectors     2;
     nNonOrthogonalCorrectors 0;
+    turbOnFinalIterOnly true;
+
+    outerCorrectorResidualControl
+    {
+        U
+        {
+            tolerance   1e-5;
+            relTol      0;
+        }
+        p
+        {
+            tolerance   5e-5;
+            relTol      0;
+        }
+    }
+
     pRefCell        0;
     pRefValue       0;
 }

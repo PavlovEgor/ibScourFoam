@@ -3,6 +3,11 @@ cd "${0%/*}" || exit                                # Run from this directory
 . ${WM_PROJECT_DIR:?}/bin/tools/RunFunctions        # Tutorial run functions
 #------------------------------------------------------------------------------
 
+# Disable Mellanox HCOLL collectives: on hosts without an InfiniBand HCA its
+# initialisation always fails with "[LOG_CAT_ML] ... HCA device" errors.
+# OpenMPI falls back to the standard collectives, so this only removes noise.
+export OMPI_MCA_coll_hcoll_enable=0
+
 restore0Dir
 
 runApplication blockMesh
@@ -11,6 +16,10 @@ runApplication snappyHexMesh -overwrite
 
 runApplication renumberMesh -overwrite
 
-runApplication $(getApplication)
+runApplication decomposePar
+
+runParallel $(getApplication)
+
+runApplication reconstructPar
 
 #------------------------------------------------------------------------------
