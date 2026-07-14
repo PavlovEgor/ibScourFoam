@@ -64,7 +64,8 @@ int main(int argc, char *argv[])
 {
     #include "postProcess.H"
 
-    #include "setRootCase.H"
+    #include "addCheckCaseOptions.H"
+    #include "setRootCaseLists.H"
     #include "createTime.H"
     #include "createImmersedBoundaryFvMesh.H"
     #include "createControl.H"
