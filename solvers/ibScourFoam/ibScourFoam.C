@@ -49,6 +49,17 @@ Description
 #include "LduMatrix.H"
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+namespace Foam
+{
+    void logStepTime(const Time& runTime, double& tPrev, const char* stepName)
+    {
+        const double tNow = runTime.elapsedCpuTime();
+        Info<< "STEP_TIME " << runTime.timeName() << ' ' << stepName << ' '
+            << (tNow - tPrev) << nl;
+        tPrev = tNow;
+    }
+}
+
 int main(int argc, char *argv[])
 {
     #include "postProcess.H"
@@ -76,24 +87,29 @@ int main(int argc, char *argv[])
     while (runTime.loop())
     {
         Info<< "Time = " << runTime.timeName() << nl << endl;
-        const double Oldtime1 = runTime.elapsedCpuTime();
-        mesh.update();
 
-        const double Oldtime2 = runTime.elapsedCpuTime();
-        
+        double tPrev = runTime.elapsedCpuTime();
+
+        mesh.update();
+        logStepTime(runTime, tPrev, "IB_MeshUpdate");
+
         // evaluateU has following functions:
         // 1. take care of dry/wet cells (only consider one object yet)
         // 2. set deadCell velocity to be zero
         // 3. setInlet (with velocity profile, only for sediment)
-        // located around Line 584 in immersedBoundaryFvMeshUpdateCellValues.C 
+        // located around Line 584 in immersedBoundaryFvMeshUpdateCellValues.C
         mesh.evaluateU();
+        logStepTime(runTime, tPrev, "IB_EvaluateU");
+
         #include "immersedBoundaryCourantNo.H"
+        logStepTime(runTime, tPrev, "CourantNo");
 
         // Pressure-velocity PIMPLE corrector
         while (pimple.loop())
         {
             Info<<"*** Starting Predictor Step"<<endl;
             #include "UEqn.H"
+            logStepTime(runTime, tPrev, "MomentumPredictor");
 
             Info<<"*** Starting Correct Step Loop"<<endl;
             // --- Pressure corrector loop
@@ -101,6 +117,7 @@ int main(int argc, char *argv[])
             {
                 #include "pEqn.H"
             }
+            logStepTime(runTime, tPrev, "PressureCorrection");
 
             if (pimple.turbCorr())
             {
@@ -115,20 +132,20 @@ int main(int argc, char *argv[])
                 // kOmegaCorrection() has detailed comments.
 
                 turbulence->correct();
+                logStepTime(runTime, tPrev, "TurbulenceCorrect");
             }
         }
-        
-        #include "calcForce.H"
-        
-        Info<<"*** Starting Sediment Step"<<endl;
-        const double Oldtime3 = runTime.elapsedCpuTime();
-       
 
-        
+        #include "calcForce.H"
+        logStepTime(runTime, tPrev, "CalcForce");
+
+        Info<<"*** Starting Sediment Step"<<endl;
+
         // For scour modeling, this is the main program of solving Exner Eqn.
         // It is located in immersedBoundaryFvMeshPostEvaluation.C
         mesh.postEvaulation();
-        
+        logStepTime(runTime, tPrev, "ScourExner");
+
         // It is pre treatment for suspended sediment transport.
         // Not well implemented yet.
    //     mesh.evaluateC();
@@ -139,16 +156,7 @@ int main(int argc, char *argv[])
         // Write out integral pressure and viscous
    //     mesh.pressureOutput();
         runTime.write();
-
-        const double Oldtime4 = runTime.elapsedCpuTime();
-
-        if(mesh.debug)
-        {
-            Info<< "Total_Time = " << Oldtime4-Oldtime1 << " s" <<endl;
-            Info<< "IB_Update_Time = " << Oldtime2-Oldtime1 << " s" <<endl;
-            Info<< "IB_CFD_Time = " << Oldtime3-Oldtime2 << " s" <<endl;
-            Info<< "Post_Time = " << Oldtime4-Oldtime3 << " s" <<endl;
-        }
+        logStepTime(runTime, tPrev, "Write");
 
         Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
             << "  ClockTime = " << runTime.elapsedClockTime() << " s"
