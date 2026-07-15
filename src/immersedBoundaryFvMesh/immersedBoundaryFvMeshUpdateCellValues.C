@@ -908,12 +908,15 @@ Foam::Field<Type> Foam::immersedBoundaryFvMesh::stencilInterpolation
 
     Field<Type> ibPsi(ibc.size(), pTraits<Type>::zero);
 
-    labelHashSet ibcSet(ibc);
+    const double siT0 = time().elapsedCpuTime();
+
     // Do interpolation, local cell data
+    label nStencilEntries = 0;
     forAll (ibc, cellI)
     {
         const labelList& curAddr = ibcc[cellI];
         const scalarList& curWeights = cellWeights[cellI];
+        nStencilEntries += curAddr.size();
 
         forAll (curAddr, ccI)
         {
@@ -922,12 +925,15 @@ Foam::Field<Type> Foam::immersedBoundaryFvMesh::stencilInterpolation
         }
     }
 
-    List<labelHashSet> ibcSetList(Pstream::nProcs());
-    labelListList ibcList(Pstream::nProcs());
-
+    const double siT1 = time().elapsedCpuTime();
+    Info<<"STEP_TIME "<<time().timeName()<<" IBsi_local "<<siT1-siT0<<nl;
+    Info<<"IBsi sizes: ibc "<<ibc.size()<<" entries "<<nStencilEntries<<nl;
 
     // Parallel communication for psi
     FieldField<Field, Type> procCellValues = sendAndReceive(psi,procCells,CProc);
+
+    const double siT2 = time().elapsedCpuTime();
+    Info<<"STEP_TIME "<<time().timeName()<<" IBsi_comm "<<siT2-siT1<<nl;
 
     // Do interpolation, cell data from other processors
     forAll (ibc, cellI)

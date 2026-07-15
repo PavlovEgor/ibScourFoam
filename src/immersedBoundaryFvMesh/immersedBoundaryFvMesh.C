@@ -480,17 +480,12 @@ bool Foam::immersedBoundaryFvMesh::update()
     makeDualMesh();
     const double Oldtime8=time().elapsedCpuTime();
 
-    if(debug)
-    {
-        Info<<"readDict Executation Time = "<<Oldtime2-Oldtime1<< " s"<<endl;
-        Info<<"markCellsExecutation Time = "<<Oldtime3-Oldtime2<< " s"<<endl;
-        Info<<"makeStencilsInfo Executation Time = "<<Oldtime5-Oldtime4<< " s"<<endl;
-        Info<<"makeTriAddressing Executation Time = "<<Oldtime6-Oldtime5<< " s"<<endl;
-        
-        Info<<"makeDualMesh Executation Time = "<<Oldtime8-Oldtime6<< " s"<<endl;
-
-        Info<<"Total update Executation Time = "<<Oldtime8-Oldtime1<< " s"<<endl;
-    }
+    // Sub-phase timings in STEP_TIME format (parsed by utilities/profileLog.py)
+    Info<<"STEP_TIME "<<time().timeName()<<" IBu_readDictStl "<<Oldtime2-Oldtime1<<nl;
+    Info<<"STEP_TIME "<<time().timeName()<<" IBu_markCells "<<Oldtime3-Oldtime2<<nl;
+    Info<<"STEP_TIME "<<time().timeName()<<" IBu_stencils "<<Oldtime5-Oldtime4<<nl;
+    Info<<"STEP_TIME "<<time().timeName()<<" IBu_triAddressing "<<Oldtime6-Oldtime5<<nl;
+    Info<<"STEP_TIME "<<time().timeName()<<" IBu_dualMesh "<<Oldtime8-Oldtime6<<nl;
 
     Info<<endl<<"****** Finish updating surface mesh information ******"<<endl<<endl;
 

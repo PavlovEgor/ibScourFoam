@@ -114,11 +114,16 @@ private:
     void makeStencils() const;
     void makeStencilsWeights() const;
 
+    //- Collect live cells around pt by point-neighbour BFS
+    //  (maxCellCellRows_ rows).  maxRadius > 0 prunes the search to
+    //  cells within that distance of pt; callers filter by the same
+    //  radius afterwards, so pruning only removes never-used candidates.
     void findCellCells
     (
         const vector& pt,
         const label cellID,
-        labelList& cellCells
+        labelList& cellCells,
+        const scalar maxRadius = -1
     )const;
 
 public:

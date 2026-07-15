@@ -107,11 +107,8 @@ void Foam::immersedBoundaryFvMesh::makeTriAddressing()const
             makeTriEdgeAddressing(objectID,true);
         }
         const double Oldtime3=time().elapsedCpuTime();
-        if(debug)
-        {
-             Info<<"cutTriSurfaceMeshList Executation Time = "<<Oldtime2-Oldtime1<< " s"<<endl;
-             Info<<"MakeTriAddressing Executation Time = "<<Oldtime3-Oldtime2<< " s"<<endl;
-        }
+        Info<<"STEP_TIME "<<time().timeName()<<" IBta_cutTriCtor "<<Oldtime2-Oldtime1<<nl;
+        Info<<"STEP_TIME "<<time().timeName()<<" IBta_addressing "<<Oldtime3-Oldtime2<<nl;
     }
 
 }

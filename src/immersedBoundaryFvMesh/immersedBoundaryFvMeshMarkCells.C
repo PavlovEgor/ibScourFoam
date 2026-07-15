@@ -165,14 +165,11 @@ void Foam::immersedBoundaryFvMesh::markCells()const
             }
             
             
-            if(debug)
-            {
-                Info<<"cellType Executation Time = "<<Oldtime2-Oldtime1<< " s"<<endl;
-                Info<<"makeGhostAndIbCells Executation Time = "<<Oldtime4-Oldtime3<< " s"<<endl;
-                Info<<"makeIbInfo Executation Time = "<<Oldtime5-Oldtime4<< " s"<<endl;
-                Info<<"makeSGamma Executation Time = "<<Oldtime6-Oldtime5<< " s"<<endl;
-
-            }
+            Info<<"STEP_TIME "<<time().timeName()<<" IBmc_cellType "<<Oldtime2-Oldtime1<<nl;
+            Info<<"STEP_TIME "<<time().timeName()<<" IBmc_gammaCellType "<<Oldtime3-Oldtime2<<nl;
+            Info<<"STEP_TIME "<<time().timeName()<<" IBmc_ghostIbCells "<<Oldtime4-Oldtime3<<nl;
+            Info<<"STEP_TIME "<<time().timeName()<<" IBmc_ibInfo "<<Oldtime5-Oldtime4<<nl;
+            Info<<"STEP_TIME "<<time().timeName()<<" IBmc_sGamma "<<Oldtime6-Oldtime5<<nl;
         }
     }
   

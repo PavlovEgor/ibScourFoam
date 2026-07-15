@@ -56,7 +56,10 @@ void Foam::immersedBoundaryFvMesh::makeDualMesh()const
 
 void Foam::immersedBoundaryFvMesh::makeDualMesh(const label& objectID)const
 {
+    const double dmT0 = time().elapsedCpuTime();
     const cutTriSurfaceMesh& cTSM = cutTriSurfaceMeshList()[objectID];
+    const double dmT1 = time().elapsedCpuTime();
+    Info<<"STEP_TIME "<<time().timeName()<<" IBdm_cutTriSurf "<<dmT1-dmT0<<nl;
     const PtrList<triSurface>& addSurfs= addObjectsList();
     const PtrList<word>& addObjectsName = addObjectsNameList();
     const dualPatch& dPatch = cTSM.newDualPatch();
@@ -414,26 +417,33 @@ void Foam::immersedBoundaryFvMesh::makeDualMesh(const label& objectID)const
         }
     }
 
-    Foam::fvMesh mesh
+    // Build the persistent dual mesh directly in memory (previously the
+    // mesh was written to disk by every rank and re-read back on every
+    // update, which serialised the whole run on global-size ASCII I/O).
+    // MUST_READ applies only to fvSchemes/fvSolution: the mesh data
+    // itself always comes from the components (polyMesh components ctor
+    // hardcodes NO_READ for points/faces/owner/neighbour), but
+    // schemesLookup takes the registry's readOpt, and with NO_READ the
+    // region's system/<region>/fvSchemes would never be read.
+    // NO_WRITE: disk copies are written explicitly below, master-only,
+    // at write times.
+    fvMesh* dualMeshPtr = new fvMesh
     (
         IOobject
         (
             objectNames(objectID)+"_dual",
             time().constant(),
             time(),
-            IOobject::NO_READ,
-            // AUTO_WRITE: in v2412 the mesh components (points, faces,
-            // owner, neighbour, boundary) inherit this writeOpt; with
-            // NO_WRITE mesh.write() below would skip them and the
-            // MUST_READ re-read of the dual mesh fails
-            IOobject::AUTO_WRITE
+            IOobject::MUST_READ,
+            IOobject::NO_WRITE
         ),
         std::move(newPoints),
         faceList(std::move(newFaces)),
         labelList(std::move(newOwners)),
         labelList(std::move(newNeighbours))
     );
-        
+    fvMesh& mesh = *dualMeshPtr;
+
 
     // make new patches
     List<polyPatch*> newPatchPtrList(patchNameList.size());
@@ -511,11 +521,15 @@ void Foam::immersedBoundaryFvMesh::makeDualMesh(const label& objectID)const
         }
     }
     
-    mesh.addPatches(newPatchPtrList);
-    
-    
+    // addFvPatches (not polyMesh::addPatches) so that the fvBoundaryMesh
+    // is built too and the mesh is directly usable for FV operations
+    // without a disk round-trip
+    mesh.addFvPatches(newPatchPtrList);
 
-    mesh.write();
+    dualMeshListPtr_->set(objectID, dualMeshPtr);
+
+    const double dmT2 = time().elapsedCpuTime();
+    Info<<"STEP_TIME "<<time().timeName()<<" IBdm_build "<<dmT2-dmT1<<nl;
 
     oldToNewDualEdgeMapListPrt_->set
     (
@@ -545,12 +559,15 @@ void Foam::immersedBoundaryFvMesh::makeDualMesh(const label& objectID)const
         Info<<mesh.checkMesh(true)<<endl;
     }
 
-    // The following export is very necessary for completeness
-    mesh.lookupObject<pointZoneMesh>("pointZones").write();
-    mesh.lookupObject<faceZoneMesh>("faceZones").write();
-    mesh.lookupObject<cellZoneMesh>("cellZones").write();
-
-    if(Pstream::parRun() and Pstream::myProcNo()==Pstream::masterNo())
+    // Keep an on-disk copy of the dual mesh for post-processing, written
+    // into the parent (undecomposed) case by the master only, and only at
+    // write times plus once at start-up.  Previously every rank wrote the
+    // full global mesh and re-read it back on every time step.
+    if
+    (
+        Pstream::master()
+     && (time().writeTime() || time().timeIndex() == time().startTimeIndex())
+    )
     {
         parallelWriteMesh(mesh.lookupObject<pointIOField>("points"));
         parallelWriteMesh(mesh.lookupObject<faceCompactIOList>("faces"));
@@ -561,24 +578,8 @@ void Foam::immersedBoundaryFvMesh::makeDualMesh(const label& objectID)const
         parallelWriteMesh(mesh.lookupObject<faceZoneMesh>("faceZones"));
         parallelWriteMesh(mesh.lookupObject<cellZoneMesh>("cellZones"));
     }
-    // Read again and save it to pointer
-    // Cannot directly use the mesh made above
-    dualMeshListPtr_->set
-    (
-        objectID,
-        new fvMesh
-        (
-            IOobject
-            (
-                objectNames(objectID)+"_dual",
-                time().constant(),
-                time(),
-                IOobject::MUST_READ,
-                IOobject::NO_WRITE
-            )
-        )
-    );
-    
+    const double dmT3 = time().elapsedCpuTime();
+    Info<<"STEP_TIME "<<time().timeName()<<" IBdm_write "<<dmT3-dmT2<<nl;
 }
 
 

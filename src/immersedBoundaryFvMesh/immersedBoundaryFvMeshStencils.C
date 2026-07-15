@@ -601,7 +601,10 @@ const Foam::immersedBoundaryStencils& Foam::immersedBoundaryFvMesh::samplingSten
 {
     if(!samplingStencilsListPtr_->set(objectID))
     {
+        const double stT0 = time().elapsedCpuTime();
         makeSamplingStencils(objectID);
+        Info<<"STEP_TIME "<<time().timeName()<<" IBst_sampling "
+            <<time().elapsedCpuTime()-stT0<<nl;
     }
 
     PtrList<immersedBoundaryStencils>& samplingStencilsList = *samplingStencilsListPtr_;
@@ -632,7 +635,10 @@ const Foam::immersedBoundaryStencils& Foam::immersedBoundaryFvMesh::ibCellStenci
 {
     if(!ibCellStencilsListPtr_->set(objectID))
     {
+        const double stT0 = time().elapsedCpuTime();
         makeIbCellStencils(objectID);
+        Info<<"STEP_TIME "<<time().timeName()<<" IBst_ibCell "
+            <<time().elapsedCpuTime()-stT0<<nl;
     }
 
     PtrList<immersedBoundaryStencils>& ibCellStencilsList = *ibCellStencilsListPtr_;
@@ -647,7 +653,10 @@ const Foam::immersedBoundaryStencils& Foam::immersedBoundaryFvMesh::ibFaceSampli
 {
     if(!ibFaceSamplingStencilsListPtr_->set(objectID))
     {
+        const double stT0 = time().elapsedCpuTime();
         makeIbFaceSamplingStencils(objectID);
+        Info<<"STEP_TIME "<<time().timeName()<<" IBst_ibFaceSampling "
+            <<time().elapsedCpuTime()-stT0<<nl;
     }
 
     PtrList<immersedBoundaryStencils>& ibFaceSamplingStencilsList = *ibFaceSamplingStencilsListPtr_;

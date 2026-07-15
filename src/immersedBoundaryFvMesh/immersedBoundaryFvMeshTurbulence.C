@@ -384,9 +384,11 @@ void Foam::immersedBoundaryFvMesh::kOmegaCorrection(const turbulenceModel& turbu
     {
         if(IBtypeList()[objectID]=="classic")
         {
+            const double wfT0 = time().elapsedCpuTime();
             kOmegaIbCorrection(turbulence,objectID);
             Info << "using kOmegaIbCorrection  "<<endl;
-
+            const double wfT1 = time().elapsedCpuTime();
+            Info<<"STEP_TIME "<<time().timeName()<<" IBturb_wallFunc "<<wfT1-wfT0<<nl;
         }
         
     }
@@ -445,6 +447,7 @@ void Foam::immersedBoundaryFvMesh::kOmegaIbCorrection
     label objectID
 )const
 {
+    const double wfC1 = time().elapsedCpuTime();
     volScalarField& omega = const_cast<volScalarField&>
         (this->lookupObject<volScalarField>("omega"));
     volScalarField& k = const_cast<volScalarField&>
@@ -504,15 +507,16 @@ void Foam::immersedBoundaryFvMesh::kOmegaIbCorrection
     // k at sampling point
     scalarField kSample(samplingPointsValues(k,objectID)+SMALL);
 
-    // epsilon at sampling point
-    scalarField omegaSample(SMALL+samplingPointsValues(omega,objectID)+SMALL);
+    // omega and nut at the sampling points used to be interpolated here
+    // as well (one stencilInterpolation round each), but the results were
+    // never used anywhere in this function, so both rounds were removed.
 
     // nu at sampling point
     scalarField nuSample(nu,ibCells);
 
-    // nut at sampling point
-    scalarField nutSample(samplingPointsValues(nut,objectID)+SMALL);
-    
+    const double wfC2 = time().elapsedCpuTime();
+    Info<<"STEP_TIME "<<time().timeName()<<" IBwf_sample "<<wfC2-wfC1<<nl;
+
     // IB distance
     scalarField yIB(mag(ibc_centers-ibHitPoints)+SMALL);
 
@@ -611,10 +615,13 @@ void Foam::immersedBoundaryFvMesh::kOmegaIbCorrection
        
             
     }
+    const double wfC3 = time().elapsedCpuTime();
+    Info<<"STEP_TIME "<<time().timeName()<<" IBwf_loop "<<wfC3-wfC2<<nl;
+
     // calculate weights for boundary patch
     // in case that one cell is shared by IB cell and Boundary cell
-    
-        
+
+
     const volScalarField::Boundary& bf = omega.boundaryField();
 
     scalarField weights(omega.primitiveField().size(),0.0);
@@ -712,6 +719,8 @@ void Foam::immersedBoundaryFvMesh::kOmegaIbCorrection
             <<yIBPout[I]<<" "
             <<tauWallPout[I]<<" "<<endl;
     }
+    const double wfC4 = time().elapsedCpuTime();
+    Info<<"STEP_TIME "<<time().timeName()<<" IBwf_stats "<<wfC4-wfC3<<nl;
     volVectorField& U_desired = const_cast<volVectorField&>
         (this->lookupObject<volVectorField>("U_desired"));
 
@@ -771,7 +780,8 @@ void Foam::immersedBoundaryFvMesh::kOmegaIbCorrection
         hitPointExportToMesh("wallShearStress",tauWall,objectID);
     }
 
-    
+    Info<<"STEP_TIME "<<time().timeName()<<" IBwf_insert "
+        <<time().elapsedCpuTime()-wfC4<<nl;
 }
 
 

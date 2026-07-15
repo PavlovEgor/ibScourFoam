@@ -668,7 +668,20 @@ void Foam::immersedBoundaryFvMesh::sediment_dual(const label& objectID)const
                 parallelWrite(divQ);
         
                 mesh.setInstance(time().timeName());
-                if(changeSTL) mesh.write();
+                if(changeSTL)
+                {
+                    // The dual mesh components are NO_WRITE (built in
+                    // memory), so mesh.write() would skip them; stream
+                    // them explicitly like the parallel branch does.
+                    parallelWriteMesh(mesh.lookupObject<pointIOField>("points"));
+                    parallelWriteMesh(mesh.lookupObject<faceCompactIOList>("faces"));
+                    parallelWriteMesh(mesh.lookupObject<labelIOList>("owner"));
+                    parallelWriteMesh(mesh.lookupObject<labelIOList>("neighbour"));
+                    parallelWriteMesh(mesh.lookupObject<polyBoundaryMesh>("boundary"));
+                    parallelWriteMesh(mesh.lookupObject<pointZoneMesh>("pointZones"));
+                    parallelWriteMesh(mesh.lookupObject<faceZoneMesh>("faceZones"));
+                    parallelWriteMesh(mesh.lookupObject<cellZoneMesh>("cellZones"));
+                }
             }
             
             if(changeSTL and Pstream::myProcNo()==Pstream::masterNo())

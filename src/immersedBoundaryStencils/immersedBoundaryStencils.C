@@ -30,6 +30,7 @@
 #include "vectorTools.H"
 #include "simpleObjectRegistry.H"
 #include "SortableList.H"
+#include "DynamicList.H"
 #include "processorPolyPatch.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -143,7 +144,8 @@ void Foam::immersedBoundaryStencils::makeStencils() const
         (
             C[ibc[cellI]],
             ibc[cellI],
-            curCells
+            curCells,
+            rM[cellI]
         );
         cellCells[cellI] = labelList(curCells.size(), -1);
 
@@ -313,7 +315,8 @@ void Foam::immersedBoundaryStencils::makeStencils() const
                         (
                             ctrs[procI][cellI],
                             nearestCellID,
-                            tmpCellList
+                            tmpCellList,
+                            rMax[procI][cellI]
                         );
 
                         forAll (tmpCellList, cI)
@@ -588,77 +591,71 @@ void Foam::immersedBoundaryStencils::findCellCells
 (
     const vector& pt,
     const label cellID,
-    labelList& cellCells
+    labelList& cellCells,
+    const scalar maxRadius
 )const
 {
     const labelListList& cellPoints = mesh().cellPoints();
     const labelListList& pointCells = mesh().pointCells();
+    const vectorField& C = mesh().cellCentres();
 
     //const scalarField& gammaI = ibGammaList()[objectID].internalField();
     const scalarField& gammaI = gamma().internalField();
     labelHashSet cellSet;
     cellSet.insert(cellID);
 
-    // First row
+    // Point-neighbour BFS, expanding only the newest row (frontier) each
+    // iteration; expanding the whole accumulated set again (as the old
+    // code did) yields the same set but costs several times more.
+    // With maxRadius > 0 cells beyond that distance from pt are pruned:
+    // the callers discard them afterwards anyway.
+    DynamicList<label> frontier(64);
+    frontier.append(cellID);
 
-    const labelList& curCellPoints = cellPoints[cellID];
-
-    forAll (curCellPoints, pointI)
+    for (label nRows = 0; nRows < maxCellCellRows_; nRows++)
     {
-        label curPoint = curCellPoints[pointI];
-        const labelList& curPointCells = pointCells[curPoint];
+        DynamicList<label> nextFrontier(2*frontier.size());
 
-        forAll (curPointCells, cI)
+        forAll (frontier, cellI)
         {
-            // stencil has to be live cells //or IB cells
-            if (gammaI[curPointCells[cI]] > gammaInclude_c())
-            {
-                if (!cellSet.found(curPointCells[cI]))
-                {
-                    cellSet.insert(curPointCells[cI]);
-                }
-            }
-        }
-    }
-
-    labelList curCells = cellSet.toc();
-
-     // Second and other rows
-    for (label nRows = 1; nRows < maxCellCellRows_; nRows++)
-    {
-        curCells = cellSet.toc();
-
-        forAll (curCells, cellI)
-        {
-            label curCell = curCells[cellI];
-            const labelList& curCellPoints = cellPoints[curCell];
+            const labelList& curCellPoints = cellPoints[frontier[cellI]];
 
             forAll (curCellPoints, pointI)
             {
-                label curPoint = curCellPoints[pointI];
-                const labelList& curPointCells = pointCells[curPoint];
+                const labelList& curPointCells =
+                    pointCells[curCellPoints[pointI]];
 
                 forAll (curPointCells, cI)
                 {
-                    if (gammaI[curPointCells[cI]] > gammaInclude_c())
-                    {
+                    const label candidate = curPointCells[cI];
 
-                        if (!cellSet.found(curPointCells[cI]))
-                        {
-                            cellSet.insert(curPointCells[cI]);
-                        }
+                    // stencil has to be live cells //or IB cells
+                    if
+                    (
+                        gammaI[candidate] > gammaInclude_c()
+                     && !cellSet.found(candidate)
+                     && (maxRadius <= 0 || mag(C[candidate] - pt) <= maxRadius)
+                    )
+                    {
+                        cellSet.insert(candidate);
+                        nextFrontier.append(candidate);
                     }
                 }
             }
+        }
+
+        frontier.transfer(nextFrontier);
+
+        if (frontier.empty())
+        {
+            break;
         }
     }
     // Erase current cell
     cellSet.erase(cellID);
 
     // Sorting cells
-    const vectorField& C = mesh().cellCentres();
-
-    curCells = cellSet.toc();
+    labelList curCells = cellSet.toc();
     scalarField distances(curCells.size(), 0);
 
     forAll (distances, cI)
