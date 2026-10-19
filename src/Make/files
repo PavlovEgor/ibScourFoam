@@ -20,4 +20,4 @@ immersedBoundaryFvOptions/sources/ibMeanVelocityForce/ibMeanVelocityForce.C
 immersedBoundaryFvOptions/sources/ibMeanVelocityForce/ibMeanVelocityForceIO.C
 
 
-LIB = $(FOAM_USER_LIBBIN)/libIBMethod
+LIB = $(FOAM_MODULE_LIBBIN)/libIBMethod

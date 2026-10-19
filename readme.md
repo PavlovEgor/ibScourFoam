@@ -7,6 +7,19 @@ This code utilizes some data structure and implementation of an immersed boundar
 
 Y. Xu and X. Liu (2021). An immersed boundary method with y+-adaptation wall function for smooth wall shear. International Journal of Numerical Methods in Fluids. https://doi.org/10.1002/fld.4960
 
+## Building ##
+
+This branch is laid out as an OpenFOAM (openfoam.com) plugin.
+
+- Standalone build into user locations (`$FOAM_USER_APPBIN`, `$FOAM_USER_LIBBIN`):
+  ```bash
+  ./Allwmake
+  ```
+- As a plugin: place (or add as a git submodule) this repository in
+  `$WM_PROJECT_DIR/plugins/ibScourFoam` and run `./Allwmake-plugins` from
+  `$WM_PROJECT_DIR`. It is then installed into `$FOAM_APPBIN`, `$FOAM_LIBBIN`.
+- Custom location: `./Allwmake -prefix=user|group|openfoam|/some/path`
+
 ## Example simulation cases ##
 
 This repository comes with some examples showing how to use the code and demonstrating its capability to deal with scour around complex structures. Animations of the simulated scour process can be viewed at our group's YouTube channel:
