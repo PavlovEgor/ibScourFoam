@@ -20,6 +20,18 @@ This branch is laid out as an OpenFOAM (openfoam.com) plugin.
   `$WM_PROJECT_DIR`. It is then installed into `$FOAM_APPBIN`, `$FOAM_LIBBIN`.
 - Custom location: `./Allwmake -prefix=user|group|openfoam|/some/path`
 
+## Layout
+
+Same as in OpenFOAM:
+
+| Directory | Contents |
+|-----------|----------|
+| `src/` | libraries (`src/Allwmake` builds them in dependency order) |
+| `applications/solvers/` | solvers |
+| `tutorials/` | tutorial cases |
+| `doc/` | documentation |
+| `bin/` | scripts and tools |
+
 ## Example simulation cases ##
 
 This repository comes with some examples showing how to use the code and demonstrating its capability to deal with scour around complex structures. Animations of the simulated scour process can be viewed at our group's YouTube channel:

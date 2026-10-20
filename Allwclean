@@ -2,7 +2,7 @@
 cd "${0%/*}" || exit                            # Run from this directory
 #------------------------------------------------------------------------------
 
-wclean src
-wclean solvers/ibScourFoam
+wclean -all src
+wclean -all applications
 
 #------------------------------------------------------------------------------
